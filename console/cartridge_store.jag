@@ -1,3 +1,4 @@
+<%
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -17,28 +18,26 @@
  * specific language governing permissions and limitations
  * under the License.
  *
-*/
+ */
+var error = [];
+var log = new Log();
+var caramel = require('caramel');
+var carbon = require('carbon');
+if(carbon.Error != undefined){
+	try{
+		var conf = carbon.server.loadConfig('cartridge-store.xml');
+		log.info("load cartridge store congiguration successfully");
+	}catch(e){ 
+		log.warn("Config " + e);
+		error.push({"errorMessage":e});
+	}
+}else{
+	log.warn("Carbon Error: " + carbon.Error);
+}
 
-var getType = function (path) {
-    var index = path.lastIndexOf('.');
-    var ext = index < path.length ? path.substring(index + 1) : '';
-    
-    switch (ext) {
-        case 'js':
-            return 'application/javascript';
-        case 'css':
-            return 'text/css';
-        case 'html':
-            return 'text/html';
-        case 'png':
-            return 'image/png';
-        case 'gif':
-            return 'image/gif';
-        case 'jpeg':
-            return 'image/jpeg';
-        case 'jpg':
-            return 'image/jpg';
-        default :
-            return 'text/plain';
-    }
-};
+session.put("cartridge_store_conf", conf);
+
+caramel.render({
+    error:error
+});
+%>

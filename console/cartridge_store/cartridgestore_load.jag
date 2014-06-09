@@ -1,0 +1,30 @@
+<%
+//get carbon home
+var carbon_util_package = Packages.org.wso2.carbon.utils.CarbonUtils;
+var carbon_util_obj = new carbon_util_package();
+
+//get main configurations xml
+var path = "file:///"+carbon_util_obj.getCarbonHome()+"/repository/conf/cartridge-store.xml";
+var file = new File(path);
+file.open("r");
+var message = "";
+message = file.readAll();     
+file.close();
+
+//load to xml parsing
+var cartridge_store_config = new XML(message);
+
+if(cartridge_store_config.text){
+	config_url = cartridge_store_config.publicUrl;	
+}else{
+	error = "sorry machn";
+}
+
+var moviesJSON = get(config_url.text()+'/store/apis/assets/esbconnector');
+
+var assets =parse(moviesJSON.data.replace(/\t/g, ''));
+
+print(assets);
+
+
+%>
