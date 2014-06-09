@@ -1,0 +1,13 @@
+<cartridgeStore>
+	<storeEnable>false</storeEnable>
+	<storePublicUrl>http://localhost:9773</storePublicUrl>
+	<storeBasicAuth>
+		<userName>admin</userName>
+		<password>admin</password>
+	</storeBasicAuth>
+	<storeAgentPublicUrl>not</storeAgentPublicUrl>
+	<storeAgentBasicAuth>
+		<userName>a</userName>
+		<password>a</password>
+	</storeAgentBasicAuth>
+</cartridgeStore>
