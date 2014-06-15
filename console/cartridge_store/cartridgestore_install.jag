@@ -3,14 +3,11 @@
 //get config from server session variable
 var log = new Log();
 var error = [];
+
+var cid = request.getParameter('cid');
+
 //encoding for Basic Auth
 var Base64Encode = require("Base64Encode.jag");
-
-var cstart = request.getParameter('start'),
-	ccount = request.getParameter('count'),
-	csortBy = request.getParameter('sortBy'),
-	csortOrder = request.getParameter('sortOrder'),
-	csearchString = request.getParameter('search');
 
 //get session loaded conf settings
 var cartridgeStoreConf = session.get("cartridge_store_conf");
@@ -29,48 +26,36 @@ var pmUrl = cartridgeStoreConf.storeAgentPublicUrl.text(),
 var apicode = apiUserName + ":" + apiUserPassword;
 var apiauth = Base64Encode.base64_encode(apicode);
 var header = {"Authorization":"Basic "+apiauth};
-var data={start:cstart, count:ccount, sortOrder: csortOrder, sortBy: csortBy};
-//check if anything goes wrong
-if(csearchString==''){
-	try{
-		var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/', data, header);
-		log.info(assetJSON);
-	}catch(e){
-		log.error(" " + e);
-		error.push({"errorMessage":e});
-	}
-}else{
-	try{
-		var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/search/'+csearchString, data, header);
-		log.info(assetJSON);
-	}catch(e){
-		log.error(" " + e);
-		error.push({"errorMessage":e});
-	}
-}
+var data='';
 
-	
+try{
+	var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/'+cid, data,header);
+}catch(e){
+	log.error(" " + e);
+	error.push({"errorMessage":e});
+}
 
 //fixing any tab issues encounter
 var tabfix = assetJSON.data.replace(/\t/g, '');
 //adding URL to JSON data
 var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
-var assets =parse(urlfix);
+var asset = parse(urlfix);
+var asseturl = asset.attributes.overview_url;
 
-
+//process installation procedure
 var pmcode = pmUserName + ":" + pmUserPassword;
 var pmauth = Base64Encode.base64_encode(pmcode);
 var pmheader = {"Authorization":"Basic "+pmauth};
 var pmdata={};
+
+var modulename = (asseturl.substring(asseturl.lastIndexOf('/')+1)).split(".")[0];
 try{
-	var puppetJSON = get(pmUrl+'/modules/puppet/status', pmdata, pmheader);
+	var puppetJSON = post(pmUrl+'/modules/puppet/'+modulename+'/url/https%3A%2F%2Fwww.dropbox.com%2Fs%2F9yc65p7b2hkw9t3%2Fnodejs.tar.gz%3Fdl%3D1/checksum/87e71eec10ad7159501326d809488161', pmdata, pmheader);
 	log.info(puppetJSON);
 	}catch(e){
-	log.error(" " + e.message);
-	//return print("errorMessage" + e.message);
+	log.error(" " + e);
 	}
 
+print(puppetJSON);
 
-print({"store_data":assets, "puppet_data": parse(puppetJSON.data) });
-	
 %>
