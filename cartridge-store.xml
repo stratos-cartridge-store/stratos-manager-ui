@@ -1,13 +1,14 @@
 <cartridgeStore>
-	<storeEnable>false</storeEnable>
+	<storeEnable>true</storeEnable>
+	<storePackageType>puppet</storePackageType>
 	<storePublicUrl>http://localhost:9773</storePublicUrl>
 	<storeBasicAuth>
-		<userName>admin</userName>
-		<password>admin</password>
+		<userName>dakshika</userName>
+		<password>psiloveu</password>
 	</storeBasicAuth>
-	<storeAgentPublicUrl>not</storeAgentPublicUrl>
+	<storeAgentPublicUrl>https://0.0.0.0:8080</storeAgentPublicUrl>
 	<storeAgentBasicAuth>
-		<userName>a</userName>
-		<password>a</password>
+		<userName>jon</userName>
+		<password>pass1</password>
 	</storeAgentBasicAuth>
 </cartridgeStore>
