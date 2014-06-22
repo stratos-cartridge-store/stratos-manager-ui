@@ -56,7 +56,7 @@ var render = function (theme, data, meta, require) {
                     has_action_buttons:false,
                     partial: 'header',
                     context:{
-                        title:'Cartridge tore',
+                        title:'Cartridge store',
                         store_selected:true,
                         button:{
                             link:'/',
