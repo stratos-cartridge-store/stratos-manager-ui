@@ -13,18 +13,18 @@
         
         <span class="sortaz"> Sort By: </span>
         <span class="sortbyname">
-            <span class="atoz sortaz"><i class="icons-arrow-down"></i></span>
-            <span class="ztoa sortaz"><i class="icons-arrow-up"></i></span>
+            <span class="atoz sortaz" data-toggle="tooltip" title="Sort by Name" data-original-title="Sort by Name"><i class="icons-arrow-down"></i></span>
+            <span class="ztoa sortaz" data-toggle="tooltip" title="Sort by Name" data-original-title="Sort by Name"><i class="icons-arrow-up"></i></span>
             <span>A</span>
         </span>
         <span class="sortbydate">
-            <span class="atoz sortaz"><i class="icons-arrow-down"></i></span>
-            <span class="ztoa sortaz"><i class="icons-arrow-up"></i></span>
+            <span class="atoz sortaz" data-toggle="tooltip" title="Sort by Date" data-original-title="Sort by Date"><i class="icons-arrow-down"></i></span>
+            <span class="ztoa sortaz" data-toggle="tooltip" title="Sort by Date" data-original-title="Sort by Date"><i class="icons-arrow-up"></i></span>
             <span><i class="icons-calendar"></i></span>
         </span>
     </div>
     <div id="cartridgesearch">
-    <input type="text" class="large-search" id="searchtxt" name="searchtxt"/><button type="button" id="searchbtn" class="btn btn-primary asset-search-btn">SEARCH</button>
+    <input type="text" class="large-search" id="searchtxt" name="searchtxt" placeholder="Enter Cartridge Name"/><button type="button" id="searchbtn" class="btn btn-primary asset-search-btn">SEARCH</button>
     </div>
     </div>
 </div>
@@ -50,12 +50,15 @@
 
 <div id="lightbox">
     <div id="lightbox-content">
-        <span><i class="icons-circle-close big-pro-icons"></i></span>
+        <span id='close'><i class="icons-circle-close big-pro-icons"></i></span>
         <div id="asset-detail-box">
             <img src='themes/theme1/ui/img/loading.gif' class="loading"/>
             
         </div>
     </div>
 </div>
-
+<a id="back-to-top" href="#" class="btn btn-primary btn-lg back-to-top" role="button" title="Click to return on the top page" data-toggle="tooltip" data-placement="left"><img src='themes/theme1/ui/img/arrow-up.png'/></a>
+        
+<script type="text/javascript" src="{{url "/themes/theme1/ui/js/vendor/jquery.notyfy.js"}}" ></script>
+<script type="text/javascript" src="{{url "/themes/theme1/ui/js/vendor/jquery.jsoneditor.min.js"}}" ></script>
 <script src="{{url "/themes/theme1/ui/js/cartridge_store.js"}}"></script>
