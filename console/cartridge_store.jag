@@ -26,7 +26,14 @@ var carbon = require('carbon');
 if(carbon.Error != undefined){
 	try{
 		var conf = carbon.server.loadConfig('cartridge-store.xml');
-		log.info("load cartridge store congiguration successfully");
+		if(conf ==''){
+			log.warn("Configuration File Cannot be empty");
+			error.push({"errorMessage":"Configuration File Cannot be empty"});
+		}else{
+			session.put("cartridge_store_conf", conf);
+			log.info("load cartridge store congiguration successfully");
+		}
+		
 	}catch(e){ 
 		log.warn("Config " + e);
 		error.push({"errorMessage":e});
@@ -35,7 +42,6 @@ if(carbon.Error != undefined){
 	log.warn("Carbon Error: " + carbon.Error);
 }
 
-session.put("cartridge_store_conf", conf);
 
 caramel.render({
     error:error
