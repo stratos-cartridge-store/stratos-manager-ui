@@ -1,0 +1,15 @@
+<%
+//get config from server session variable
+var log = new Log();
+var error = [];
+
+//encoding for Basic Auth
+var sso = require("sso");
+var cartridge_json = request.getParameter('djson');
+var tabfix = cartridge_json.replace(/\t/g, '');
+
+var utils = require('/util/utility.jag');
+
+var response = utils.consoleAppUtil.deployCartridgeDefinition(tabfix);
+
+print(cartridge_json);

@@ -1,0 +1,51 @@
+<%
+var log = new Log();
+var error = [];
+var infomsg = '';
+
+var name = request.getParameter('name');
+
+//encoding for Basic Auth
+var sso = require("sso");
+
+//include basic auth base configs
+include('cartridgestore_include.jag');
+
+var	pmdata={};
+
+try{
+
+	var puppetJSON = get(pmUrl+'/modules/status?packagetype='+packageType+'&modulename='+name, pmdata, pmheader);
+	
+	var parsedJSON = parse(puppetJSON.data);
+	if(puppetJSON.xhr.status == '404'){
+			log.error( "Agent Error: " + packageType + " Package type not found");
+			error.push({"errorMessage":"Package type not found on server"});
+			infomsg = 'error';
+	}else if(puppetJSON.xhr.status == '401'){
+			log.error( "Agent Error: Unauthorized access to Agent");
+			error.push({"errorMessage":"Unauthorized access to Agent"});
+	}else if(puppetJSON.xhr.status == '200'){
+		
+		if(parsedJSON.Code == '10'){
+			infomsg = 'error';
+		}else if(parsedJSON.Code == '12'){
+			infomsg = 'information';
+		}else{
+			infomsg = 'success';
+		}
+
+	}
+
+}catch(e){
+	log.error(" " + e);
+	error.push({"errorMessage":e.message});
+}
+
+if(error.length==0){
+	print({"puppet_data": parsedJSON , "errorMessage": '', "notification_type": infomsg});
+}else{
+	print(error);
+}
+
+%>

@@ -1,0 +1,25 @@
+<%
+//get session loaded conf settings
+var cartridgeStoreConf = session.get("cartridge_store_conf");
+
+//get store api based variables
+var apiUrl = cartridgeStoreConf.storePublicUrl.text(),
+	apiUserName=cartridgeStoreConf.storeBasicAuth.userName.text(),
+	apiUserPassword=cartridgeStoreConf.storeBasicAuth.password.text();
+
+//get puppet master based variables
+var pmUrl = cartridgeStoreConf.storeAgentPublicUrl.text(),
+	pmUserName=cartridgeStoreConf.storeAgentBasicAuth.userName.text(),
+	pmUserPassword=cartridgeStoreConf.storeAgentBasicAuth.password.text(),
+	packageType =cartridgeStoreConf.storePackageType.text();
+
+
+var apicode = apiUserName + ":" + apiUserPassword,
+	apiauth = sso.client.b64encode(apicode),
+	header = {"Authorization":"Basic "+apiauth};
+
+
+var pmcode = pmUserName + ":" + pmUserPassword,
+	pmauth = sso.client.b64encode(pmcode),
+	pmheader = {"Authorization":"Basic "+pmauth};
+%>
