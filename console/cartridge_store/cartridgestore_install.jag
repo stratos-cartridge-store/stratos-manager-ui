@@ -3,59 +3,76 @@
 //get config from server session variable
 var log = new Log();
 var error = [];
+var infomsg = '';
+
+//encoding for Basic Auth
+var sso = require("sso");
+
+//include basic auth base configs
+include('cartridgestore_include.jag');
 
 var cid = request.getParameter('cid');
 
-//encoding for Basic Auth
-var Base64Encode = require("Base64Encode.jag");
-
-//get session loaded conf settings
-var cartridgeStoreConf = session.get("cartridge_store_conf");
-
-//get api based variables
-var apiUrl = cartridgeStoreConf.storePublicUrl.text(),
-	apiUserName=cartridgeStoreConf.storeBasicAuth.userName.text(),
-	apiUserPassword=cartridgeStoreConf.storeBasicAuth.password.text();
-
-//get puppet master based variables
-var pmUrl = cartridgeStoreConf.storeAgentPublicUrl.text(),
-	pmUserName=cartridgeStoreConf.storeAgentBasicAuth.userName.text(),
-	pmUserPassword=cartridgeStoreConf.storeAgentBasicAuth.password.text();
-
-
-var apicode = apiUserName + ":" + apiUserPassword;
-var apiauth = Base64Encode.base64_encode(apicode);
-var header = {"Authorization":"Basic "+apiauth};
-var data='';
+var	data='';
 
 try{
 	var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/'+cid, data,header);
+	if(assetJSON.xhr.status == '401'){
+		log.error( "Store Error: Unauthorized access to Cartridge Store");
+		error.push({"errorMessage":"Unauthorized access to Cartridge Store"});
+	}else{
+		//fixing any tab issues encounter
+		var tabfix = assetJSON.data.replace(/\t/g, '');
+		//adding URL to JSON data
+		var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
+		var asset = parse(urlfix);
+		var asseturl = asset.attributes.overview_url;
+		var checksum = asset.attributes.overview_checksum;
+		var downloadUrl = encodeURI(asset.attributes.overview_url);
+	}
+
 }catch(e){
 	log.error(" " + e);
 	error.push({"errorMessage":e});
 }
 
-//fixing any tab issues encounter
-var tabfix = assetJSON.data.replace(/\t/g, '');
-//adding URL to JSON data
-var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
-var asset = parse(urlfix);
-var asseturl = asset.attributes.overview_url;
-
 //process installation procedure
-var pmcode = pmUserName + ":" + pmUserPassword;
-var pmauth = Base64Encode.base64_encode(pmcode);
-var pmheader = {"Authorization":"Basic "+pmauth};
-var pmdata={};
 
 var modulename = (asseturl.substring(asseturl.lastIndexOf('/')+1)).split(".")[0];
+var pmdata={packagetype: packageType, 
+			modulename:modulename, 
+			checksum: checksum, 
+			downloadUrl: downloadUrl
+			};
+
 try{
-	var puppetJSON = post(pmUrl+'/modules/puppet/'+modulename+'/url/https%3A%2F%2Fwww.dropbox.com%2Fs%2F9yc65p7b2hkw9t3%2Fnodejs.tar.gz%3Fdl%3D1/checksum/87e71eec10ad7159501326d809488161', pmdata, pmheader);
-	log.info(puppetJSON);
-	}catch(e){
-	log.error(" " + e);
+
+	var puppetJSON = post(pmUrl+'/modules/install', pmdata, pmheader);
+	
+	if(puppetJSON.xhr.status == '404'){
+			log.error( "Agent Error: " + packageType + " Package type not found");
+			error.push({"errorMessage":"Package type not found on server"});
+	}
+	
+	var parsedJSON = parse(puppetJSON.data);
+	if(puppetJSON.xhr.status == '202'){
+		log.info( "Agent Info: Accepted your request, " + packageType + " moudle will be installed soon!");
+		infomsg = 'information';
+	}else if(puppetJSON.xhr.status == '409'){
+		log.info( "Agent Info: Module is already available in puppet master");
+		infomsg = 'error';
+	}else if(puppetJSON.xhr.status == '404'){
+		log.info( "Agent Info: Package Type is not Found");
+		infomsg = 'error';
 	}
 
-print(puppetJSON);
+}catch(e){
+	log.error(" " + e);
+}
 
+if(error.length==0){
+	print({"puppet_data": parsedJSON , "errorMessage": '', "notification_type": infomsg });
+}else{
+	print(error);
+}
 %>

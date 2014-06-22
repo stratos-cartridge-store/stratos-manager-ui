@@ -1,76 +1,84 @@
 <%
-//getting start and offset
-//get config from server session variable
 var log = new Log();
+//define errors
 var error = [];
 //encoding for Basic Auth
-var Base64Encode = require("Base64Encode.jag");
+var sso = require("sso");
 
+var assets;
+
+//include basic auth base configs
+include('cartridgestore_include.jag');
+
+//get parameters by request
 var cstart = request.getParameter('start'),
 	ccount = request.getParameter('count'),
 	csortBy = request.getParameter('sortBy'),
 	csortOrder = request.getParameter('sortOrder'),
 	csearchString = request.getParameter('search');
 
-//get session loaded conf settings
-var cartridgeStoreConf = session.get("cartridge_store_conf");
-
-//get api based variables
-var apiUrl = cartridgeStoreConf.storePublicUrl.text(),
-	apiUserName=cartridgeStoreConf.storeBasicAuth.userName.text(),
-	apiUserPassword=cartridgeStoreConf.storeBasicAuth.password.text();
-
-//get puppet master based variables
-var pmUrl = cartridgeStoreConf.storeAgentPublicUrl.text(),
-	pmUserName=cartridgeStoreConf.storeAgentBasicAuth.userName.text(),
-	pmUserPassword=cartridgeStoreConf.storeAgentBasicAuth.password.text();
-
-
-var apicode = apiUserName + ":" + apiUserPassword;
-var apiauth = Base64Encode.base64_encode(apicode);
-var header = {"Authorization":"Basic "+apiauth};
 var data={start:cstart, count:ccount, sortOrder: csortOrder, sortBy: csortBy};
+
 //check if anything goes wrong
 if(csearchString==''){
+
+	//load initial cartridge data
 	try{
 		var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/', data, header);
-		log.info(assetJSON);
+		if(assetJSON.xhr.status == '401'){
+			log.error( "Store Error: Unauthorized access to Cartridge Store");
+			error.push({"errorMessage":"Unauthorized access to Cartridge Store"});
+		}else{
+			//fixing any tab issues encounter
+			var tabfix = assetJSON.data.replace(/\t/g, '');
+			//adding URL to JSON data
+			var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
+			var assets =parse(urlfix);
+		}
 	}catch(e){
 		log.error(" " + e);
-		error.push({"errorMessage":e});
+		error.push({"errorMessage":e.message});
 	}
 }else{
 	try{
 		var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/search/'+csearchString, data, header);
-		log.info(assetJSON);
+		
+		if(assetJSON.xhr.status == '401'){
+			log.error( "Store Error: Unauthorized access to Cartridge Store");
+			error.push({"errorMessage":"Unauthorized access to Cartridge Store"});
+		}else{
+			//fixing any tab issues encounter
+			var tabfix = assetJSON.data.replace(/\t/g, '');
+			//adding URL to JSON data
+			var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
+			assets =parse(urlfix);
+		}
 	}catch(e){
 		log.error(" " + e);
-		error.push({"errorMessage":e});
+		error.push({"errorMessage":e.message});
 	}
 }
 
-	
 
-//fixing any tab issues encounter
-var tabfix = assetJSON.data.replace(/\t/g, '');
-//adding URL to JSON data
-var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
-var assets =parse(urlfix);
+var	pmdata={};
 
-
-var pmcode = pmUserName + ":" + pmUserPassword;
-var pmauth = Base64Encode.base64_encode(pmcode);
-var pmheader = {"Authorization":"Basic "+pmauth};
-var pmdata={};
 try{
-	var puppetJSON = get(pmUrl+'/modules/puppet/status', pmdata, pmheader);
-	log.info(puppetJSON);
-	}catch(e){
-	log.error(" " + e.message);
-	//return print("errorMessage" + e.message);
-	}
+	var puppetJSON = get(pmUrl+'/modules/list?packagetype='+packageType, pmdata, pmheader);
+		if(puppetJSON.xhr.status == '404'){
+			log.error( "Agent Error: " + packageType + " Package type not found");
+			error.push({"errorMessage":"Package type not found on server"});
+		}else if(puppetJSON.xhr.status == '401'){
+			log.error( "Agent Error: Unauthorized access to Agent");
+			error.push({"errorMessage":"Unauthorized access to Agent"});
+		}
+}catch(e){
+		log.error(" " + e);
+		error.push({"errorMessage":e.message});
+}
 
-
-print({"store_data":assets, "puppet_data": parse(puppetJSON.data) });
-	
+if(error.length==0){
+	print({"store_data":assets, "puppet_data": parse(puppetJSON.data) , "errorMessage": ''});	
+}else{
+	print(error);	
+}
 %>

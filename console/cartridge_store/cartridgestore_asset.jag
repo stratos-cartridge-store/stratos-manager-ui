@@ -1,29 +1,63 @@
 <%
-//getting start and offset
-//get config from server session variable
 var log = new Log();
-
-var cid = request.getParameter('cid');
-
-var cartridgeStoreConf = session.get("cartridge_store_conf");
-
-var apiUrl = cartridgeStoreConf.storePublicUrl.text();
-var apiUserName=cartridgeStoreConf.storeBasicAuth.userName.text();
-var apiUserPassword=cartridgeStoreConf.storeBasicAuth.password.text();
-
+//define errors
+var error = [];
 //encoding for Basic Auth
-var Base64Encode = require("Base64Encode.jag");
-var code = apiUserName + ":" + apiUserPassword;
-var auth = Base64Encode.base64_encode(code);
+var sso = require("sso");
+//notification type
+var infomsg = '';
 
-var header = {"Authorization":"Basic "+auth};
-var data=''
-var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/'+cid, data,header);
-//fixing any tab issues encounter
-var tabfix = assetJSON.data.replace(/\t/g, '');
-//adding URL to JSON data
-var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
-var asset = parse(urlfix);
 
-print(asset);
+//get parameters by request
+var cid = request.getParameter('cid'),
+	name = request.getParameter('name');
+
+//include basic auth base configs
+include('cartridgestore_include.jag');
+
+var	data='';
+
+try{
+	var assetJSON = get(apiUrl+'/store/apis/v2/assets/cartridge/'+cid, data, header);
+	if(assetJSON.xhr.status == '401'){
+			log.error( "Store Error: Unauthorized access to Cartridge Store");
+			error.push({"errorMessage":"Unauthorized access to Cartridge Store"});
+	}else{
+		//fixing any tab issues encounter
+		var tabfix = assetJSON.data.replace(/\t/g, '');
+		//adding URL to JSON data
+		var urlfix = tabfix.replace(/\/store/g, apiUrl.toString()+'/store');
+		var assets =parse(urlfix);
+	}
+}catch(e){
+	log.warn(' ' + e);
+	error.push({"errorMessage":e.message});
+}
+
+
+var	pmdata={};
+
+
+try{
+
+	var puppetJSON = get(pmUrl+'/modules/status?packagetype='+packageType+'&modulename='+name, pmdata, pmheader);
+	
+	if(puppetJSON.xhr.status == '404'){
+			log.error( "Agent Error: " + packageType + " Package type not found");
+			infomsg = 'error';
+	}else{
+
+	}
+
+}catch(e){
+	log.error(" " + e);
+	error.push({"errorMessage":e.message});
+}
+
+if(error.length==0){
+	print({"store_data":assets, "puppet_data": parse(puppetJSON.data) , "errorMessage": '', "notification_type": infomsg});
+}else{
+	print(error);
+}
+
 %>
