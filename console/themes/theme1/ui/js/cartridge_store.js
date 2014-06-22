@@ -10,11 +10,13 @@ var start = 0;
 var sortOrder = "DES";
 var sortBy = "overview_createdtime";
 var search_word=''; 
+var deploy_json='';
+
 //ajax erorr handler
 $(function() {
 	$.ajaxSetup({
 		error: function(jqXHR, exception) {
-			console.log(exception);
+			
 			if (jqXHR.status === 0) {
 				ajaxerror_handler = 'Not connect.\n Verify Network.';
 			} else if (jqXHR.status == 404) {
@@ -54,49 +56,74 @@ $(document).ready(function(){
 	   	}, 500);
 	    	
 	   }
+
+	    if ($(this).scrollTop() > 50) {
+                $('#back-to-top').fadeIn();
+            } else {
+                $('#back-to-top').fadeOut();
+            }
 	});
+
+
+	 // scroll body to 0px on click
+        $('#back-to-top').click(function () {
+            $('#back-to-top').tooltip('hide');
+            $('body,html').animate({
+                scrollTop: 0
+            }, 800);
+            return false;
+        });
+        
+        $('#back-to-top').tooltip('show');
+        $('.sortaz').tooltip();
+
 
 
 });
 
 function getassets(start, offset, sortOrder, sortBy, search){
 	//init base ajax call to get initial set
-		//add loading effect 
 	var ustart= start || 0,
 		ucount= offset || 8,
 		usortOrder= sortOrder || "DES",
 		usearch= search || '',
 		usortBy = sortBy || "overview_createdtime";
-
+	//add loading effect
 	$('.loader').html("<img src='themes/theme1/ui/img/loading.gif' />");
-	//disable search button to prevent 
-	//$('#searchbtn').attr('disabled','disabled');
-	//console.log(Object.keys(jQuery.parseJSON(assets)).length);
+
 	if(assets != '' && Object.keys(assets).length < offsetcount){
 		$('.scroll-more').html('No More cartridges available');
 		$('.scroll-more').removeClass( "alert-info" ).addClass( "alert-danger" );
 		$('.loader').html('');
 	}else{
-
-
-
 		//get json from store
 		$.ajax({
 		  url: "cartridge_store/cartridgestore_search.jag?start="+ustart+"&count="+ucount+"&sortOrder="+usortOrder+"&sortBy="+usortBy+"&search="+usearch,
 		}).done(function(result) {
-		   	cartridge_set = $.parseJSON(result);
-		   	puppet_data = cartridge_set.puppet_data;
-
-//console.log(puppet_data);
-		    assets = cartridge_set.store_data;
-		     if(Object.keys(sortassets).length >0 ){
-		     	sortassets = $.merge(sortassets,assets)
-		     }else{
-		     	sortassets =  assets; 
-		     }
-		    
-		    $('.cartridge-load').append(assetListHTML(assets, puppet_data));
-		    $('.loader').html('');
+			cartridge_set = $.parseJSON(result);
+			if(cartridge_set.errorMessage != ''){
+				
+				$('.loader').html('');
+				$('.scroll-more').hide();
+				//track multiple errors
+				$.each(cartridge_set, function(idx, obj) {
+					$('.loader').append('<div class="alert alert-danger alert-empty-page">'+obj.errorMessage+'</div>');
+				});
+					
+			}else{
+				puppet_data = cartridge_set.puppet_data;
+			    assets = cartridge_set.store_data;
+			    if(Object.keys(sortassets).length >0 ){
+			     	sortassets = $.merge(sortassets,assets)
+			    }else{
+			     	sortassets =  assets; 
+			    }
+			    
+			    $('.cartridge-load').append(assetListHTML(assets, puppet_data));
+			    $('.loader').html('');
+			}
+		   	
+		   	
 		});
 	}
 	
@@ -108,19 +135,24 @@ function assetListHTML(assets, puppet_data){
 	var html='', button_text='', filename ='', button_style='';
 	//return html base on that
 	if(assets){
-		console.log(assets + 'adooooo ');
+		
 	$.each(assets, function(idx, obj) {
 
-		filename = (obj.attributes.overview_url.substring(obj.attributes.overview_url.lastIndexOf('/')+1)).split(".")[0];
-		
-		if ($.inArray( filename , puppet_data.installed) > 0) {
+		filename = obj.attributes.overview_deployableName;
+		if ($.inArray( filename , puppet_data.installed) >= 0) {
           	button_text = 'Deploy';
           	button_style = 'btn-danger asset-done-btn';
-        }else if($.inArray( filename , puppet_data.inprogress) > 0){
+        }else if($.inArray( filename , puppet_data.inprogress) >= 0){
+
         	button_text = 'Progressing';
           	button_style = 'btn-default asset-done-btn';
+        }else if($.inArray( filename , puppet_data.error) >= 0){
+        	
+        	button_text = 'Re-install';
+          	button_style = 'btn-primary asset-download-btn';
         }
         else{
+        
         	button_text = 'Install';
         	button_style = 'btn-primary asset-download-btn';
         }
@@ -131,14 +163,15 @@ function assetListHTML(assets, puppet_data){
 		html += 		'<img src="'+obj.attributes.images_thumbnail+'">';
 		html +=		'</div></a>';
 		html +=		'<div class="asset-details">';
+		html += '<div class="status-refresh" data-name="'+obj.attributes.overview_deployableName
+					+'"><img src="themes/theme1/ui/img/arrow-refresh.png" alt="Click to get Status" data-toggle="tooltip" data-placement="right" title="Click to get Status"/></div>';
 		html +=			'<div class="asset-name"><a href=""> <h4>'+obj.attributes.overview_name+'</h4> </a></div>';
 		html +=			'<div class="asset-rating"><div class="asset-rating-'+obj.rating.average+'star"></div></div>';
 		html +=			'<div class="asset-author-category"><ul>';
 		html +=				'<li><h4>Version</h4><a class="asset-version" href="#">'+obj.attributes.overview_version+'</a></li>';
-		//html +=				'<li><h4>Category</h4><a class="asset-category" href="#">'+obj.type+'</a></li>';
 		html +=				'<li><h4>Author</h4><a class="asset-author" href="#">'+obj.attributes.overview_provider+'</a></li>';
-		html +=				'<li><button type="button" class="btn btn-default asset-detail-btn" id="'+obj.id+'"> Details </button></li>';
-		html +=				'<li><button type="button" class="btn '+button_style+' " id="'+obj.id+'">'+button_text+'</button></li>';
+		html +=				'<li><button type="button" class="btn btn-default asset-detail-btn" id="'+obj.id+'" data-name="'+obj.attributes.overview_deployableName+'" > Details </button></li>';
+		html +=				'<li><button type="button" class="btn '+button_style+' " id="'+obj.id+'" data-name="'+obj.attributes.overview_deployableName+'">'+button_text+'</button></li>';
 		html +=			'</ul></div>';
 		html +=		'</div></div>';
 		html += '';
@@ -163,6 +196,23 @@ function assetListHTML(assets, puppet_data){
 function assetHTML(asset, puppet_data){
 	var html='';
 	if (asset) {
+		if (puppet_data.Code == '11') {
+          	button_text = 'Deploy';
+          	button_style = 'btn-danger asset-done-btn';
+        }else if(puppet_data.Code == '12'){
+
+        	button_text = 'Progressing';
+          	button_style = 'btn-default asset-done-btn';
+        }else if(puppet_data.Code == '10'){
+        	
+        	button_text = 'Re-install';
+          	button_style = 'btn-primary asset-download-btn';
+        }
+        else{
+        
+        	button_text = 'Install';
+        	button_style = 'btn-primary asset-download-btn';
+        }
 		html += '<div class="asset-description">';
         html += '	<div class="asset-description-header">';
         html += '   	<div class="row">';
@@ -171,12 +221,16 @@ function assetHTML(asset, puppet_data){
         html += '                   <img src="'+asset.attributes.images_banner+'">';
         html += '               </div>';
         html += '               <div class="asset-introduction-box">';
-        html += '                   <img src="'+asset.attributes.images_thumbnail+'">';
+        html += '                   <img src="'+asset.attributes.images_thumbnail+'" class="intro-img">';
         html += '                   <h3>'+asset.attributes.overview_name+'</h3>';
         html += '                   <small> Version : '+asset.attributes.overview_version+'</small>';
         html += '                   <small> Version : '+asset.attributes.overview_category+'</small>';
         html += '                   <small>  by :  '+asset.attributes.overview_provider+' </small>';	
-		html +=				'<button type="button" class="btn btn-primary asset-download-detail-btn" id="'+asset.id+'"> Install </button>';
+        html += '			<div class="status-refresh" data-name="'+asset.attributes.overview_deployableName
+							+'"><img src="themes/theme1/ui/img/arrow-refresh.png" title="Click to get Status"/></div>';
+		html +=				'<div class="detail-install"><button type="button" class="btn '+button_style+'" style="position: relative;" id="'+asset.id
+							+'" data-name="'+asset.attributes.overview_deployableName+'">'
+							+button_text+'</button></div>';
         html += '                </div>';
 		html += '			</div>';
 		html += '		</div>';
@@ -199,35 +253,50 @@ function assetHTML(asset, puppet_data){
 	return html;
 }
 
-//check after ajax load
+
+//generating deployemnt view html
+function assetDeployHTML(asset){
+	var html='';
+	if (asset) {
+		html += '<div class="asset-description">';
+        html += '	<div class="asset-description-header">';
+        html += '   	<div class="row">';
+        html += '            <div class="span9">';
+        html += '                <div class="json-editor">';
+        html += '               </div>';
+        html += '               <div class="asset-introduction-box">';
+        html += '                   <img src="'+asset.attributes.images_thumbnail+'">';
+        html += '                   <h3>'+asset.attributes.overview_name+'</h3>';
+        html += '                   <small> Version : '+asset.attributes.overview_version+'</small>';
+        html += '                   <small> Version : '+asset.attributes.overview_category+'</small>';
+        html += '                   <small>  by :  '+asset.attributes.overview_provider+' </small>';	
+		html +=				'<small><button type="button" class="btn btn-danger asset-curl-btn" style="position: relative;" id="'+asset.id
+							+'" data-name="'+asset.attributes.overview_deployableName+'"> Deploy </button></small>';
+        html += '                </div>';
+		html += '			</div>';
+		html += '		</div>';
+        html += '    </div>';
+        html += '</div>';
+	}
+
+	return html;
+}
+
+
+//detect event on DOMModification 
 $(document).bind("DOMSubtreeModified",function(){
-  
 	$('.asset').hover(function(){
 	 	$(this).find('.asset-details').stop().animate({top:'0px'},'slow');
 	},function(){
 		$(this).find('.asset-details').stop().animate({top:'200px'},'slow');
 	})
-
-});
-
-
-//to trigger asset details
-$(document).on('click', '.asset-detail-btn', function () {
-    // click handler code goes here
-    $('#lightbox').fadeIn('slow');
-    var cid = $(this).attr('id');
-    $.ajax({
-		  url: "cartridge_store/cartridgestore_asset.jag?cid="+cid,
-		}).done(function(result) {
-		    asset = $.parseJSON(result);
-		    $('#asset-detail-box').html(assetHTML(asset));
-		});
 });
 
 
 //close down popup asset details
 $('.icons-circle-close').click(function(){
 	$('#lightbox').fadeOut('slow');
+	$("body").css("overflow", "auto");
 });
 
 
@@ -295,6 +364,8 @@ $('.sortbydate .ztoa').click(function(){
 	getassets(start, offset, sortOrder, sortBy, search_word);
 });
 
+
+
 //search function
 function searchcartridge(search_word){
 	var resultfind;
@@ -317,6 +388,7 @@ function searchcartridge(search_word){
 
 }
 
+//trigger enter key & click
 $('#searchbtn').click(function(){
 	var search_word = $('#searchtxt').val();
 	searchcartridge(search_word);
@@ -331,17 +403,109 @@ $(document).keypress(function(e) {
 
 //to trigger install button
 $(document).on('click', '.asset-download-btn', function () {
-    // click handler code goes here
-   // $('#lightbox').fadeIn('slow');
-
     var cid = $(this).attr('id');
+    var name = $(this).data('name');
     $(this).html('Progressing');
     $(this).removeClass('btn-primary').addClass('btn-default');
     $(this).attr('disabled','disabled');
+    $(this).parent().parent().parent().parent().parent().find('.status-refresh').css('display','block');
 
     $.ajax({
 		  url: "cartridge_store/cartridgestore_install.jag?cid="+cid,
+	}).done(function(result) {
+		   var notification = $.parseJSON(result);
+		   //handle error status
+		   notyfy({text: notification.puppet_data.Message, layout: 'bottomRight', type: notification.notification_type, timeout:5000});
+	});
+
+});
+
+//get status of current cartridge
+$(document).on('click', '.status-refresh', function (event) {
+	var name = $(this).data('name');
+	$.ajax({
+		url: "cartridge_store/cartridgestore_asset_status.jag?name="+name,
+	}).done(function(result) {
+		var notification = $.parseJSON(result);
+		if(notification.puppet_data.Code == '10'){
+			$(event.target).parent().parent().find('.asset-download-btn').removeAttr('disabled').removeClass('btn-default').addClass('btn-primary asset-download-btn').html('Re-install');
+			$(event.target).parent().hide();
+		}else if(notification.puppet_data.Code == '11'){
+			$(event.target).parent().parent().find('.asset-download-btn').removeAttr('disabled').removeClass('btn-default asset-download-btn').addClass('btn-danger asset-done-btn').html('Deploy');
+			$(event.target).parent().hide();			
+		}
+		
+		notyfy({text: notification.puppet_data.Message, layout: 'bottomRight', type: notification.notification_type, timeout:5000});
+	});
+	
+});
+
+//handling deployment script details
+$(document).on('click', '.asset-done-btn', function () {
+	var cid = $(this).attr('id');
+	var name = $(this).data('name');
+	// click popup loader
+    $('#lightbox').fadeIn('slow');
+    $("body").css("overflow", "hidden");
+    $.ajax({
+		  url: "cartridge_store/cartridgestore_asset_deploy.jag?cid="+cid+"&name="+name,
+	}).done(function(result) {
+		var returndata = $.parseJSON(result);
+		console.log(returndata);
+		var opt = { 
+		        change: function(data) { 
+		        	console.log(data);
+		         	deploy_json = data;
+		     	},
+		        propertyclick: function(path) { /* called when a property is clicked with the JS path to that property */ }
+		};
+
+
+
+		$('#asset-detail-box').html(assetDeployHTML(returndata.store_data) );
+
+		if(returndata.puppet_data.Code == '404'){
+			notyfy({text: returndata.puppet_data.Message, layout: 'bottomRight', type: 'error', timeout:5000});
+		}else{
+			deploy_json = returndata.puppet_data;
+			$('.json-editor').jsonEditor(deploy_json, opt);
+		}
+
+	});
+   
+
+});
+
+
+
+//to trigger asset details
+$(document).on('click', '.asset-detail-btn', function () {
+    // click handler code goes here
+    $('#lightbox').fadeIn('slow');
+    var cid = $(this).attr('id');
+    var name = $(this).data('name');
+
+    $.ajax({
+		  url: "cartridge_store/cartridgestore_asset.jag?cid="+cid+"&name="+name,
 		}).done(function(result) {
-		   console.log(result);
+		    asset = $.parseJSON(result);
+		    console.log(asset);
+		    $('#asset-detail-box').html(assetHTML(asset.store_data, asset.puppet_data));
 		});
+});
+
+
+//to trigger 	curl
+$(document).on('click', '.asset-curl-btn', function () {
+		
+	$.ajax({
+		url: "cartridge_store/cartridgestore_asset_json.jag",
+		data: { djson: JSON.stringify(deploy_json)},
+		type: 'POST',
+		dataType: "json"
+	}).done(function(result) {
+		// asset = $.parseJSON(result);
+		console.log(result);
+	});
+
 });
