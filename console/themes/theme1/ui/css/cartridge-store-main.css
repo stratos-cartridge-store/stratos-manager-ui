@@ -18,6 +18,10 @@
 .asset-icon {
     position: relative;
 }
+
+.ico {
+padding-top: 2px;
+}
 .asset-icon-overlay {
     position: absolute;
     top: 0;
@@ -100,7 +104,7 @@
 .asset-name a:hover i {
     color: #229a55;
 }
-.asset-name a i {
+.asset-name i {
 
     position: absolute;
     font-size: 18px;
@@ -110,7 +114,7 @@
     color: #AAAAAA;
 }
 
-.asset-name a h4 {
+.asset-name h4 {
     color: #34495E;
     font-weight: bold;
     height: 20px;
@@ -131,8 +135,16 @@ width: 100%;
 margin-left: 27px;
 }
 
+.over-but {
+float: left;
+margin-left: 1px !important;
+position: relative;
+width: 216px;
+margin-top: 22px;
+}
+
 .asset-detail-btn {
-    bottom: 20px;
+   bottom: -20px;
     font-weight: 600;
     left: 15px;
     padding: 10px;
@@ -163,6 +175,7 @@ margin-left: 27px;
     text-align: center;
     color: #FFFFF !important;
     width: 80%;
+    margin-top: 30px;
 }
 
 .asset-done-btn {
@@ -194,6 +207,14 @@ margin-left: 27px;
     color: #888;
     margin: 0;
 }
+
+.asset-author-category {
+margin-top: 10px;
+}
+.asset-author-category div{
+margin-bottom: 8px;
+}
+
 .search-right {
 float: right;
 margin: 10px 0px;
@@ -243,7 +264,7 @@ width: 100%;
 
 #lightbox-content {
 margin: 11% auto;
-width: 50%;
+width: 65%;
 height: 70%;
 background-color: #fff;
 -webkit-box-shadow: 1px 1px 2px 1px #ADADAD;
@@ -307,6 +328,7 @@ box-shadow:         0px 0px 8px 0px rgba(50, 50, 50, 0.75);
 float: right;
 padding: 10px;
 width: 215px;
+margin-top: 12px;
 }
 
 .asset-introduction-box .status-refresh{
@@ -536,16 +558,26 @@ position: relative;
 /* ============================================= */
 /* JSON EDITOR*/
 
-.json-editor { 
-padding: 18px 0px;
+.editor-warpper{
+    padding: 18px 0px;
 width: 61%;
 height: 600px;
-overflow: scroll;
 float: left;
 margin: 23px 38px;
-webkit-box-shadow: 0px 0px 8px 0px rgba(50, 50, 50, 0.75);
+/*webkit-box-shadow: 0px 0px 8px 0px rgba(50, 50, 50, 0.75);
 -moz-box-shadow: 0px 0px 8px 0px rgba(50, 50, 50, 0.75);
-box-shadow: 0px 0px 8px 0px rgba(50, 50, 50, 0.75);
+box-shadow: 0px 0px 8px 0px rgba(50, 50, 50, 0.75);*/
+}
+
+.json-editor { 
+height: 580px;
+overflow: scroll;
+}
+
+#raw-json-edit{
+    height: 580px;
+overflow: scroll;
+width: 100%;
 }
 
 .json-editor.expanded .item { 
@@ -634,3 +666,10 @@ box-shadow: 0px 0px 8px 0px rgba(50, 50, 50, 0.75);
 
 .status-refresh{display: none;}
 .detail-install{margin-top: 30px;}
+
+.h-array{background-color: #2D5B89; }
+.h-object{background-color: #E17000;}
+.h-string{background-color: #009408 }
+.h-number{background-color: #497B8D;}
+.h-boolean{background-color: #d9edf7 }
+.h-active{background-color: #DED8F0;}
