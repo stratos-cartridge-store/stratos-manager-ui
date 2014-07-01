@@ -11,6 +11,7 @@ var sortOrder = "DES";
 var sortBy = "overview_createdtime";
 var search_word=''; 
 var deploy_json='';
+var search='';
 
 //ajax erorr handler
 $(function() {
@@ -48,23 +49,24 @@ $(function() {
 $(document).ready(function(){
 	
 	$(window).scroll(function () { 
-	   if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+
+	   if ($(window).scrollTop() >= $(document).height() - $(window).height()) {
 	   	setTimeout(function(){
 	   		start = offset;
 	   		offset = offset+8;
-	   		getassets(start, offset, sortOrder, sortBy);
-	   	}, 500);
+	   		getassets(start, offset, sortOrder, sortBy, '');
+	   	}, 600);
 	    	
 	   }
 
-	    if ($(this).scrollTop() > 50) {
+	   if ($(this).scrollTop() > 50) {
                 $('#back-to-top').fadeIn();
-            } else {
+    } else {
                 $('#back-to-top').fadeOut();
             }
 	});
 
-
+ 	
 	 // scroll body to 0px on click
         $('#back-to-top').click(function () {
             $('#back-to-top').tooltip('hide');
@@ -77,9 +79,13 @@ $(document).ready(function(){
         $('#back-to-top').tooltip('show');
         $('.sortaz').tooltip();
 
-
-
 });
+
+// editor handler
+function printJSON() {
+    $('#raw-json-edit').val(JSON.stringify(json));
+
+}
 
 function getassets(start, offset, sortOrder, sortBy, search){
 	//init base ajax call to get initial set
@@ -90,9 +96,9 @@ function getassets(start, offset, sortOrder, sortBy, search){
 		usortBy = sortBy || "overview_createdtime";
 	//add loading effect
 	$('.loader').html("<img src='themes/theme1/ui/img/loading.gif' />");
-
-	if(assets != '' && Object.keys(assets).length < offsetcount){
-		$('.scroll-more').html('No More cartridges available');
+	//console.log(assets);
+	if(assets != '' && (assets.length < offsetcount)){
+		$('.scroll-more').html('No more cartridges available');
 		$('.scroll-more').removeClass( "alert-info" ).addClass( "alert-danger" );
 		$('.loader').html('');
 	}else{
@@ -104,7 +110,7 @@ function getassets(start, offset, sortOrder, sortBy, search){
 			if(cartridge_set.errorMessage != ''){
 				
 				$('.loader').html('');
-				$('.scroll-more').hide();
+				//$('.scroll-more').hide();
 				//track multiple errors
 				$.each(cartridge_set, function(idx, obj) {
 					$('.loader').append('<div class="alert alert-danger alert-empty-page">'+obj.errorMessage+'</div>');
@@ -113,14 +119,20 @@ function getassets(start, offset, sortOrder, sortBy, search){
 			}else{
 				puppet_data = cartridge_set.puppet_data;
 			    assets = cartridge_set.store_data;
-			    if(Object.keys(sortassets).length >0 ){
+			    if(sortassets.length >0 ){
 			     	sortassets = $.merge(sortassets,assets)
 			    }else{
 			     	sortassets =  assets; 
 			    }
 			    
+
 			    $('.cartridge-load').append(assetListHTML(assets, puppet_data));
 			    $('.loader').html('');
+
+			    if(assets.length < offsetcount){
+			    	$('.scroll-more').html('No more cartridges available');
+					$('.scroll-more').removeClass( "alert-info" ).addClass( "alert-danger" );
+			    }
 			}
 		   	
 		   	
@@ -133,12 +145,12 @@ function getassets(start, offset, sortOrder, sortBy, search){
 //generate assets list
 function assetListHTML(assets, puppet_data){
 	var html='', button_text='', filename ='', button_style='';
-	//return html base on that
+	//return html base on th
 	if(assets){
 		
 	$.each(assets, function(idx, obj) {
 
-		filename = obj.attributes.overview_deployableName;
+		filename = obj.attributes.overview_deployablename;
 		if ($.inArray( filename , puppet_data.installed) >= 0) {
           	button_text = 'Deploy';
           	button_style = 'btn-danger asset-done-btn';
@@ -163,16 +175,16 @@ function assetListHTML(assets, puppet_data){
 		html += 		'<img src="'+obj.attributes.images_thumbnail+'">';
 		html +=		'</div></a>';
 		html +=		'<div class="asset-details">';
-		html += '<div class="status-refresh" data-name="'+obj.attributes.overview_deployableName
+		html += '<div class="status-refresh" data-name="'+obj.attributes.overview_deployablename
 					+'"><img src="themes/theme1/ui/img/arrow-refresh.png" alt="Click to get Status" data-toggle="tooltip" data-placement="right" title="Click to get Status"/></div>';
-		html +=			'<div class="asset-name"><a href=""> <h4>'+obj.attributes.overview_name+'</h4> </a></div>';
+		html +=			'<div class="asset-name"><h4>'+obj.attributes.overview_name+'</h4></div>';
 		html +=			'<div class="asset-rating"><div class="asset-rating-'+obj.rating.average+'star"></div></div>';
-		html +=			'<div class="asset-author-category"><ul>';
-		html +=				'<li><h4>Version</h4><a class="asset-version" href="#">'+obj.attributes.overview_version+'</a></li>';
-		html +=				'<li><h4>Author</h4><a class="asset-author" href="#">'+obj.attributes.overview_provider+'</a></li>';
-		html +=				'<li><button type="button" class="btn btn-default asset-detail-btn" id="'+obj.id+'" data-name="'+obj.attributes.overview_deployableName+'" > Details </button></li>';
-		html +=				'<li><button type="button" class="btn '+button_style+' " id="'+obj.id+'" data-name="'+obj.attributes.overview_deployableName+'">'+button_text+'</button></li>';
-		html +=			'</ul></div>';
+		html +=			'<div class="asset-author-category">';
+		html +=				'<div><h4>Version</h4>'+obj.attributes.overview_version+'</div>';
+		html +=				'<div><h4>Author</h4>'+obj.attributes.overview_provider+'</div>';
+		html +=				'<div class="over-but"><button type="button" class="btn btn-default asset-detail-btn" id="'+obj.id+'" data-name="'+obj.attributes.overview_deployablename+'" > Details </button></div>';
+		html +=				'<div class="over-but"><button type="button" class="btn '+button_style+' " id="'+obj.id+'" data-name="'+obj.attributes.overview_deployablename+'">'+button_text+'</button></div>';
+		html +=			'</div>';
 		html +=		'</div></div>';
 		html += '';
 	});
@@ -181,7 +193,8 @@ function assetListHTML(assets, puppet_data){
 	}
 
 	if(html==''){
-		$('.scroll-more').html('No Cartridge found');
+		$('.scroll-more').html('No cartridge found');
+		$('.scroll-more').removeClass( "alert-info" ).addClass( "alert-danger" );
 		$('#searchtxt').val('');
 		start = 0;
 		offset =8;
@@ -226,10 +239,10 @@ function assetHTML(asset, puppet_data){
         html += '                   <small> Version : '+asset.attributes.overview_version+'</small>';
         html += '                   <small> Version : '+asset.attributes.overview_category+'</small>';
         html += '                   <small>  by :  '+asset.attributes.overview_provider+' </small>';	
-        html += '			<div class="status-refresh" data-name="'+asset.attributes.overview_deployableName
+        html += '			<div class="status-refresh" data-name="'+asset.attributes.overview_deployablename
 							+'"><img src="themes/theme1/ui/img/arrow-refresh.png" title="Click to get Status"/></div>';
 		html +=				'<div class="detail-install"><button type="button" class="btn '+button_style+'" style="position: relative;" id="'+asset.id
-							+'" data-name="'+asset.attributes.overview_deployableName+'">'
+							+'" data-name="'+asset.attributes.overview_deployablename+'">'
 							+button_text+'</button></div>';
         html += '                </div>';
 		html += '			</div>';
@@ -262,16 +275,41 @@ function assetDeployHTML(asset){
         html += '	<div class="asset-description-header">';
         html += '   	<div class="row">';
         html += '            <div class="span9">';
-        html += '                <div class="json-editor">';
+        html += '                <div class="editor-warpper">';
+		html += '	        		<ul class="nav nav-tabs mytabs">';
+		html += '					  <li class="active"><a href="#myeditor" data-toggle="tab">Editor</a></li>';
+		html += '					  <li><a href="#raw-json" data-toggle="tab">Raw JSON</a></li>';
+		html += '					  <li><a href="#editor-help" data-toggle="tab">Help</a></li>';
+		html += '					</ul>';
+		html += '					<div class="tab-content">';
+		html += '					  <div class="tab-pane active json-editor" id="myeditor"></div>';
+		html += '					  <div class="tab-pane" id="raw-json"><textarea id="raw-json-edit" class="form-control"></textarea></div>';
+		html += '					  <div class="tab-pane" id="editor-help">' +
+
+										'<div class="table-responsive">'+
+										  '<table class="table">'+
+										    '<thead><tr><th>Key</th><th>Description</th></tr></thead>'+
+										       '<tbody>'+
+										       	'<tr ><td class="h-array"></td><td>Array</td></tr>'+
+										       	'<tr><td class="h-object"></td><td>Object</td></tr>'+
+										       	'<tr><td class="h-string"></td><td>String</td></tr>'+
+										       	'<tr><td class="h-number"></td><td>Number</td></tr>'+
+										       	'<tr><td class="h-boolean"></td><td>Boolean</td></tr>'+
+										       	'<tr><td></td><td>Delete a property name to remove item</td></tr>'+
+										       '</tbody>'+
+										  '</table>'+
+										'</div>'+
+									 '</div>';
+		html += '					</div>';
         html += '               </div>';
         html += '               <div class="asset-introduction-box">';
-        html += '                   <img src="'+asset.attributes.images_thumbnail+'">';
+        html += '                   <img src="'+asset.attributes.images_thumbnail+'" class="intro-img">';
         html += '                   <h3>'+asset.attributes.overview_name+'</h3>';
         html += '                   <small> Version : '+asset.attributes.overview_version+'</small>';
         html += '                   <small> Version : '+asset.attributes.overview_category+'</small>';
         html += '                   <small>  by :  '+asset.attributes.overview_provider+' </small>';	
 		html +=				'<small><button type="button" class="btn btn-danger asset-curl-btn" style="position: relative;" id="'+asset.id
-							+'" data-name="'+asset.attributes.overview_deployableName+'"> Deploy </button></small>';
+							+'" data-name="'+asset.attributes.overview_deployablename+'"> Deploy </button></small>';
         html += '                </div>';
 		html += '			</div>';
 		html += '		</div>';
@@ -313,7 +351,7 @@ $('.sortbyname .atoz').click(function(){
 	sortOrder = "DES";
 	sortBy = "overview_name";
 	search_word = $('#searchtxt').val();
-	$('.scroll-more').html('Scroll Down to load more...');
+	$('.scroll-more').html('Scroll down to load more...');
 	$('.scroll-more').removeClass( "alert-danger" ).addClass( "alert-info" );
 	getassets(start, offset, sortOrder, sortBy, search_word);
 });
@@ -328,7 +366,7 @@ $('.sortbyname .ztoa').click(function(){
 	sortOrder = "ASC";
 	sortBy = "overview_name";
 	search_word = $('#searchtxt').val();
-	$('.scroll-more').html('Scroll Down to load more...');
+	$('.scroll-more').html('Scroll down to load more...');
 	$('.scroll-more').removeClass( "alert-danger" ).addClass( "alert-info" );
 	getassets(start, offset, sortOrder, sortBy, search_word);
 });
@@ -344,7 +382,7 @@ $('.sortbydate .atoz').click(function(){
 	sortOrder = "DES";
 	sortBy = "overview_createdtime";
 	search_word = $('#searchtxt').val();
-	$('.scroll-more').html('Scroll Down to load more...');
+	$('.scroll-more').html('Scroll down to load more...');
 	$('.scroll-more').removeClass( "alert-danger" ).addClass( "alert-info" );
 	getassets(start, offset, sortOrder, sortBy, search_word);
 });
@@ -359,7 +397,7 @@ $('.sortbydate .ztoa').click(function(){
 	sortOrder = "ASC";
 	sortBy = "overview_createdtime";
 	search_word = $('#searchtxt').val();
-	$('.scroll-more').html('Scroll Down to load more...');
+	$('.scroll-more').html('Scroll down to load more...');
 	$('.scroll-more').removeClass( "alert-danger" ).addClass( "alert-info" );
 	getassets(start, offset, sortOrder, sortBy, search_word);
 });
@@ -373,7 +411,7 @@ function searchcartridge(search_word){
 	
 	if(search_word ==''){
 		$('.cartridge-load').html('');
-		$('.scroll-more').html('Please Enter Cartridge Name on Search field');
+		$('.scroll-more').html('Please enter cartridge name on search field');
 		$('.scroll-more').removeClass( "alert-danger" ).addClass( "alert-warning" );	
 	}else{
 		start = 0;
@@ -396,19 +434,24 @@ $('#searchbtn').click(function(){
 
 $(document).keypress(function(e) {
     if(e.which == 13) {
+
         var search_word = $('#searchtxt').val();
-		searchcartridge(search_word);
+        if(search_word){
+        	searchcartridge(search_word);
+        }
+		
     }
 });
 
 //to trigger install button
-$(document).on('click', '.asset-download-btn', function () {
+$(document).on('click', '.asset-download-btn', function (event) {
     var cid = $(this).attr('id');
     var name = $(this).data('name');
     $(this).html('Progressing');
     $(this).removeClass('btn-primary').addClass('btn-default');
     $(this).attr('disabled','disabled');
-    $(this).parent().parent().parent().parent().parent().find('.status-refresh').css('display','block');
+    $(event.target).parent().parent().parent().find('.status-refresh').css('display','block');
+
 
     $.ajax({
 		  url: "cartridge_store/cartridgestore_install.jag?cid="+cid,
@@ -440,6 +483,45 @@ $(document).on('click', '.status-refresh', function (event) {
 	
 });
 
+
+var json_editor_opt = { 
+		        change: function(data) { 
+		         	deploy_json = data;
+		         	$('#raw-json-edit').val(JSON.stringify(deploy_json, null, 4));
+		     	},
+		        propertyclick: function(path) { 
+
+		         }
+		};
+
+//handle json editor errors
+$(document).on('input', '#raw-json-edit', function () {
+		
+	var val = $('#raw-json-edit').val();
+        
+        if (val) {
+            try { 
+            	deploy_json = JSON.parse(val); 
+            	if(typeof deploy_json =='object')
+				{
+				  	$(this).css('border-color','#468847');
+	            	$(this).css('background-color','#dff0d8');
+	            	$(this).parent().parent().parent().parent().find('.asset-introduction-box .asset-curl-btn').removeAttr('disabled');
+				}
+            }
+            catch (e) { 
+            	$(this).css('border-color','red');
+            	$(this).css('background-color','#ffeeee');
+            	$(this).parent().parent().parent().parent().find('.asset-introduction-box .asset-curl-btn').attr('disabled','disabled');
+            }
+        } else {
+            deploy_json = {};
+        }
+        
+        $('#myeditor').jsonEditor(deploy_json, json_editor_opt);
+        
+});
+
 //handling deployment script details
 $(document).on('click', '.asset-done-btn', function () {
 	var cid = $(this).attr('id');
@@ -451,16 +533,6 @@ $(document).on('click', '.asset-done-btn', function () {
 		  url: "cartridge_store/cartridgestore_asset_deploy.jag?cid="+cid+"&name="+name,
 	}).done(function(result) {
 		var returndata = $.parseJSON(result);
-		console.log(returndata);
-		var opt = { 
-		        change: function(data) { 
-		        	console.log(data);
-		         	deploy_json = data;
-		     	},
-		        propertyclick: function(path) { /* called when a property is clicked with the JS path to that property */ }
-		};
-
-
 
 		$('#asset-detail-box').html(assetDeployHTML(returndata.store_data) );
 
@@ -468,7 +540,10 @@ $(document).on('click', '.asset-done-btn', function () {
 			notyfy({text: returndata.puppet_data.Message, layout: 'bottomRight', type: 'error', timeout:5000});
 		}else{
 			deploy_json = returndata.puppet_data;
-			$('.json-editor').jsonEditor(deploy_json, opt);
+			$('#myeditor').jsonEditor(deploy_json, json_editor_opt);
+
+			$('#myeditor').tab('show');
+			$('#raw-json-edit').val(JSON.stringify(deploy_json, null, 4));
 		}
 
 	});
@@ -489,7 +564,7 @@ $(document).on('click', '.asset-detail-btn', function () {
 		  url: "cartridge_store/cartridgestore_asset.jag?cid="+cid+"&name="+name,
 		}).done(function(result) {
 		    asset = $.parseJSON(result);
-		    console.log(asset);
+		   // console.log(asset);
 		    $('#asset-detail-box').html(assetHTML(asset.store_data, asset.puppet_data));
 		});
 });
@@ -504,8 +579,26 @@ $(document).on('click', '.asset-curl-btn', function () {
 		type: 'POST',
 		dataType: "json"
 	}).done(function(result) {
-		// asset = $.parseJSON(result);
+
 		console.log(result);
+		if(result.errorMessage != ''){
+			$.each(result, function(idx, obj) {
+			notyfy({text: obj.errorMessage, layout: 'bottomRight', type: 'error', timeout:5000});
+			});
+		}else{
+			notyfy({text: $.parseJSON(result.sm_data).stratosAdminResponse.message, layout: 'bottomRight', type: 'success', timeout:5000});
+		}
+		
 	});
 
 });
+
+$(document).on('click', '.mytabs a[href="#raw-json"]', function (e) {
+  $('#raw-json-edit').val(JSON.stringify(deploy_json, null, 4));
+  $('#raw-json-edit').css('border-color','#468847');
+  $('#raw-json-edit').css('background-color','#dff0d8');
+  $('.asset-curl-btn').removeAttr('disabled');
+  $(this).tab('show')
+})
+
+//
