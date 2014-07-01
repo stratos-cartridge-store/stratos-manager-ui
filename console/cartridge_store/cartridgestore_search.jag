@@ -2,8 +2,6 @@
 var log = new Log();
 //define errors
 var error = [];
-//encoding for Basic Auth
-var sso = require("sso");
 
 var assets;
 
@@ -18,7 +16,7 @@ var cstart = request.getParameter('start'),
 	csearchString = request.getParameter('search');
 
 var data={start:cstart, count:ccount, sortOrder: csortOrder, sortBy: csortBy};
-
+log.info(csearchString);
 //check if anything goes wrong
 if(csearchString==''){
 
@@ -75,6 +73,7 @@ try{
 		log.error(" " + e);
 		error.push({"errorMessage":e.message});
 }
+
 
 if(error.length==0){
 	print({"store_data":assets, "puppet_data": parse(puppetJSON.data) , "errorMessage": ''});	

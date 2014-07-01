@@ -5,9 +5,6 @@ var log = new Log();
 var error = [];
 var infomsg = '';
 
-//encoding for Basic Auth
-var sso = require("sso");
-
 //include basic auth base configs
 include('cartridgestore_include.jag');
 

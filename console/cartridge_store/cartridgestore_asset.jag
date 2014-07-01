@@ -2,8 +2,6 @@
 var log = new Log();
 //define errors
 var error = [];
-//encoding for Basic Auth
-var sso = require("sso");
 //notification type
 var infomsg = '';
 

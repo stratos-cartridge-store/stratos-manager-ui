@@ -1,4 +1,6 @@
 <%
+//encoding for Basic Auth
+var sso = require("sso");
 //get session loaded conf settings
 var cartridgeStoreConf = session.get("cartridge_store_conf");
 
@@ -22,4 +24,7 @@ var apicode = apiUserName + ":" + apiUserPassword,
 var pmcode = pmUserName + ":" + pmUserPassword,
 	pmauth = sso.client.b64encode(pmcode),
 	pmheader = {"Authorization":"Basic "+pmauth};
+
+
+
 %>

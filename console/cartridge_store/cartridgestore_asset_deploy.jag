@@ -4,9 +4,6 @@ var log = new Log();
 var error = [];
 var infomsg = '';
 
-//encoding for Basic Auth
-var sso = require("sso");
-
 var cid = request.getParameter('cid');
 var name = request.getParameter('name');
 

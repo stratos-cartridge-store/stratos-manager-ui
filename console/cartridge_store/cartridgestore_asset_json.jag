@@ -2,14 +2,48 @@
 //get config from server session variable
 var log = new Log();
 var error = [];
+var infomsg = '';
 
 //encoding for Basic Auth
 var sso = require("sso");
+
 var cartridge_json = request.getParameter('djson');
 var tabfix = cartridge_json.replace(/\t/g, '');
 
-var utils = require('/util/utility.jag');
+//var utils = require('/util/utility.jag');
+var config = require('/config/console.js').config();
+var backendServerURL = config.backendServerConfiguration.url;
 
-var response = utils.consoleAppUtil.deployCartridgeDefinition(tabfix);
+//var response = utils.consoleAppUtil.deployCartridgeDefinition(tabfix);
 
-print(cartridge_json);
+
+var restendcode = 'admin' + ":" + 'admin',
+	restendauth = sso.client.b64encode(restendcode),
+	header = {"Authorization":"Basic "+restendauth, "Content-Type": "application/json"};
+
+try{
+
+    var puppetJSON = post(backendServerURL +'/cartridge/definition', tabfix, header);
+ 	var checkerror = parse(puppetJSON.data);
+
+ 	if(puppetJSON.xhr.status !=200){
+ 		if(checkerror.Error.errorCode==400){
+ 		log.error("Stratos Manager: " + checkerror.Error.errorMessage);
+ 		error.push({"errorMessage":checkerror.Error.errorMessage});
+    	infomsg = 'error';
+ 	}
+ 	}
+ 	
+
+}catch(e){
+    log.error(" " + e);
+    error.push({"errorMessage":e.message});
+    infomsg = 'error';
+}
+
+
+if(error.length==0){
+	print({"sm_data": puppetJSON.data , "errorMessage": '', "notification_type": infomsg });
+}else{
+	print(error);
+}
