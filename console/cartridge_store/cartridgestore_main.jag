@@ -1,4 +1,0 @@
-<%
-var log = new Log();
-
-%>
